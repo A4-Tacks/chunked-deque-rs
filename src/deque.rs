@@ -5,17 +5,10 @@ use crate::chunk::{Chunk, InChunk, LayoutInfo, Size as _};
 #[cfg(test)]
 mod tests;
 
+pub(crate) mod iter;
+
 const _: () =
     assert!(size_of::<Option<Deque<i16>>>() == size_of::<Deque<i16>>());
-
-// |<-------|-----------------|----------->| chunks * info
-//   |<---->|<--------------->|<----->|
-//     left         mid         right
-//                  ^^^ chunks * info - (left != 0) - (right != 0)?
-//                  我得想想这个模型
-//
-// ==0时不存在?
-// 还是left right总是inclusive吧, 双指针逻辑
 
 pub struct Deque<T> {
     info: LayoutInfo,
@@ -24,14 +17,9 @@ pub struct Deque<T> {
     left: InChunk,
 }
 
-impl<T> core::fmt::Debug for Deque<T> {
+impl<T: core::fmt::Debug> core::fmt::Debug for Deque<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("Deque")
-            .field("info", &self.info)
-            .field("left", &self.left)
-            .field("chunks", &self.chunks)
-            .field("right", &self.right)
-            .finish()
+        f.debug_list().entry(&self.iter()).finish()
     }
 }
 
@@ -74,6 +62,12 @@ impl<T> Deque<T> {
         Some(unsafe { self.chunks.back()?.get(self.right.size()).as_ref() })
     }
 
+    pub fn back_mut(&mut self) -> Option<&mut T> {
+        Some(unsafe {
+            self.chunks.back_mut()?.get(self.right.size()).as_mut()
+        })
+    }
+
     pub fn push_back(&mut self, value: T) {
         if self.chunks.is_empty() || self.info.for_inc(&mut self.right) {
             self.chunks.push_back(Chunk::new(self.info));
@@ -92,6 +86,16 @@ impl<T> Deque<T> {
             unsafe { self.chunks.pop_back().unwrap().dealloc(self.info) };
         }
         Some(value)
+    }
+
+    pub fn front(&self) -> Option<&T> {
+        Some(unsafe { self.chunks.front()?.get(self.left.size()).as_ref() })
+    }
+
+    pub fn front_mut(&mut self) -> Option<&mut T> {
+        Some(unsafe {
+            self.chunks.front_mut()?.get(self.left.size()).as_mut()
+        })
     }
 
     pub fn push_front(&mut self, value: T) {
@@ -117,5 +121,13 @@ impl<T> Deque<T> {
     #[inline(always)]
     fn pop_is_empty(&self) -> bool {
         self.chunks.len() == 1 && self.left == self.right
+    }
+
+    pub fn iter(&self) -> iter::Iter<'_, T> {
+        self.into_iter()
+    }
+
+    pub fn iter_mut(&mut self) -> iter::IterMut<'_, T> {
+        self.into_iter()
     }
 }

@@ -16,6 +16,9 @@ impl Size for InChunk {
     }
 }
 
+/// This value from `_GLIBCXX_DEQUE_BUF_SIZE`
+const _DEQUE_CHUNK_SIZE: usize = 512;
+
 mod layout {
     use alloc::alloc::Layout;
 
@@ -118,6 +121,49 @@ impl<T> Chunk<T> {
     pub unsafe fn get(&self, index: usize) -> NonNull<T> {
         self.expect(true, index);
         unsafe { self.data.add(index) }
+    }
+
+    #[track_caller]
+    pub unsafe fn iter(
+        &self,
+        start: usize,
+        end: usize,
+    ) -> core::slice::Iter<'_, T> {
+        if start < end {
+            self.expect(true, start);
+            self.expect(true, end - 1);
+            unsafe {
+                let data = self.data.add(start);
+                core::ptr::slice_from_raw_parts(
+                    data.as_ptr().cast_const(),
+                    end - start,
+                )
+                .as_ref_unchecked()
+                .iter()
+            }
+        } else {
+            core::slice::Iter::default()
+        }
+    }
+
+    #[track_caller]
+    pub unsafe fn iter_mut(
+        &self,
+        start: usize,
+        end: usize,
+    ) -> core::slice::IterMut<'_, T> {
+        if start < end {
+            self.expect(true, start);
+            self.expect(true, end - 1);
+            unsafe {
+                let data = self.data.add(start);
+                core::ptr::slice_from_raw_parts_mut(data.as_ptr(), end - start)
+                    .as_mut_unchecked()
+                    .iter_mut()
+            }
+        } else {
+            core::slice::IterMut::default()
+        }
     }
 
     #[track_caller]

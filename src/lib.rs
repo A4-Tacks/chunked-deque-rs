@@ -6,3 +6,4 @@ mod chunk;
 mod deque;
 
 pub use deque::Deque;
+pub use deque::iter::*;
