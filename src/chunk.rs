@@ -29,7 +29,7 @@ mod layout {
 
     impl LayoutInfo {
         fn get<T>(self) -> Layout {
-            Layout::array::<T>(self.0.try_into().unwrap()).unwrap()
+            Layout::array::<T>(self.0.into()).unwrap()
         }
 
         pub fn count(self) -> usize {
@@ -41,8 +41,8 @@ mod layout {
                 return NonNull::dangling();
             }
             let data = unsafe { alloc::alloc::alloc(self.get::<T>()) };
-            let data = NonNull::new(data).expect("can't alloc chunk").cast();
-            data
+
+            NonNull::new(data).expect("can't alloc chunk").cast()
         }
 
         pub(super) unsafe fn dealloc<T>(self, ptr: NonNull<T>) {

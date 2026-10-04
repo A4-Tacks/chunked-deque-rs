@@ -166,3 +166,9 @@ impl<T> Deque<T> {
         self.into_iter()
     }
 }
+
+impl<T> Default for Deque<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
