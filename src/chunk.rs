@@ -106,6 +106,8 @@ pub(crate) struct Chunk<T> {
     #[cfg(test)]
     slots: core::cell::RefCell<alloc::vec::Vec<bool>>,
 }
+unsafe impl<T: Sync> Sync for Chunk<T> {}
+unsafe impl<T: Send> Send for Chunk<T> {}
 
 impl<T> core::fmt::Debug for Chunk<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
