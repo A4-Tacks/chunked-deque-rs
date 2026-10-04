@@ -166,6 +166,37 @@ impl<T> Deque<T> {
     pub fn iter_mut(&mut self) -> iter::IterMut<'_, T> {
         self.into_iter()
     }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        if index >= self.len() {
+            return None;
+        }
+        // XXX: 也许未来可以试着为指数大小做一个特殊case看看性能?
+        let chunk_size = self.chunk_size();
+        let offset = index + self.left.size();
+        unsafe {
+            Some(
+                self.chunks[offset / chunk_size]
+                    .get(offset % chunk_size)
+                    .as_ref(),
+            )
+        }
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if index >= self.len() {
+            return None;
+        }
+        let chunk_size = self.chunk_size();
+        let offset = index + self.left.size();
+        unsafe {
+            Some(
+                self.chunks[offset / chunk_size]
+                    .get(offset % chunk_size)
+                    .as_mut(),
+            )
+        }
+    }
 }
 
 impl<T> Default for Deque<T> {

@@ -96,7 +96,7 @@ fn mixed_push() {
 }
 
 fn mixed_from(n: i32) -> Deque<i32> {
-    let mut rand = oorandom::Rand64::new(7);
+    let mut rand = oorandom::Rand64::new(n as u128);
     let mut deque = Deque::new();
     let mid = (rand.rand_u64() as u32 % n as u32) as i32;
     let mut iter = 0..mid;
@@ -258,5 +258,17 @@ fn fuzzy_zst() {
     for _ in 0..10000 {
         let action = Action::from_num(rand.rand_u64());
         action.do_both(|| (), &mut a, &mut b);
+    }
+}
+
+#[test]
+fn index() {
+    for n in 1000..1010 {
+        let mut deque = mixed_from(n);
+        for i in 0..deque.len() {
+            assert_eq!(deque.get(i).copied(), Some(i as i32));
+            assert_eq!(deque.get_mut(i).copied(), Some(i as i32));
+            *deque.get_mut(i).unwrap() = 0;
+        }
     }
 }
