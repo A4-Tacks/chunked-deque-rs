@@ -20,18 +20,38 @@ impl Size for InChunk {
 const DEQUE_CHUNK_SIZE: usize = 512;
 
 mod layout {
+    use core::ptr::NonNull;
+
     use alloc::alloc::Layout;
 
     #[derive(Debug, Clone, Copy)]
     pub(crate) struct LayoutInfo(pub(super) u16);
 
     impl LayoutInfo {
-        pub(super) fn get<T>(self) -> Layout {
+        fn get<T>(self) -> Layout {
             Layout::array::<T>(self.0.try_into().unwrap()).unwrap()
         }
 
         pub fn count(self) -> usize {
             self.0.into()
+        }
+
+        pub(super) unsafe fn alloc<T>(self) -> NonNull<T> {
+            if size_of::<T>() == 0 {
+                return NonNull::dangling();
+            }
+            let data = unsafe { alloc::alloc::alloc(self.get::<T>()) };
+            let data = NonNull::new(data).expect("can't alloc chunk").cast();
+            data
+        }
+
+        pub(super) unsafe fn dealloc<T>(self, ptr: NonNull<T>) {
+            if size_of::<T>() == 0 {
+                return;
+            }
+            unsafe {
+                alloc::alloc::dealloc(ptr.as_ptr().cast(), self.get::<T>())
+            }
         }
     }
 }
@@ -119,8 +139,7 @@ impl<T> Chunk<T> {
     }
 
     pub fn new(info: LayoutInfo) -> Self {
-        let data = unsafe { alloc::alloc::alloc(info.get::<T>()) };
-        let data = NonNull::new(data).expect("can't alloc chunk").cast();
+        let data = unsafe { info.alloc() };
 
         Self {
             data,
@@ -201,7 +220,7 @@ impl<T> Chunk<T> {
             self.expect(false, index);
         }
         unsafe {
-            alloc::alloc::dealloc(self.data.as_ptr().cast(), info.get::<T>())
+            info.dealloc(self.data);
         };
     }
 }
