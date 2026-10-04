@@ -3,6 +3,17 @@ name = "chunked-deque"
 version = "0.1.0"
 edition = "2024"
 
+license = "MIT"
+authors = ["A4-Tacks <wdsjxhno1001@163.com>"]
+
+description = "Similar c++ std::deque, like VecDeque<Box<[T; N]>>"
+keywords = ["chunk", "deque", "queue"]
+categories = ["data-structures"]
+repository = "https://github.com/A4-Tacks/chunked-deque-rs"
+readme = "./README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
 [dev-dependencies]
 oorandom = "11.1.5"
-
