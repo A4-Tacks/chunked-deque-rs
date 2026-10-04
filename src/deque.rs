@@ -5,6 +5,7 @@ use crate::chunk::{Chunk, InChunk, LayoutInfo, Size as _};
 #[cfg(test)]
 mod tests;
 
+mod common;
 pub(crate) mod iter;
 
 const _: () =
