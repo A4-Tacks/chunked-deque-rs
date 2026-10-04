@@ -30,8 +30,21 @@ impl<T> Drop for Deque<T> {
 }
 
 impl<T> Deque<T> {
-    pub fn new() -> Self {
-        let info = Chunk::<T>::layout();
+    pub const fn new() -> Self {
+        Self::with_layout(LayoutInfo::auto::<T>())
+    }
+
+    /// Manual set chunk size.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size == 0`.
+    pub const fn with_chunksize(size: u16) -> Deque<T> {
+        assert!(size != 0, "chunk size by zero");
+        Self::with_layout(LayoutInfo::with(size))
+    }
+
+    const fn with_layout(info: LayoutInfo) -> Self {
         Self {
             info,
             chunks: VecDeque::new(),
@@ -44,6 +57,7 @@ impl<T> Deque<T> {
         self.info.count() * self.chunks.capacity()
     }
 
+    #[must_use]
     pub fn len(&self) -> usize {
         match self.chunks.len() {
             0 => 0,
@@ -56,6 +70,19 @@ impl<T> Deque<T> {
                     + 1
             }
         }
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn chunk_size(&self) -> usize {
+        self.info.count()
+    }
+
+    pub fn chunk_count(&self) -> usize {
+        self.chunks.len()
     }
 
     pub fn back(&self) -> Option<&T> {

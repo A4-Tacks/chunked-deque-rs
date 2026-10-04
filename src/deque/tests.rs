@@ -196,20 +196,20 @@ impl Action {
         }
     }
 
-    fn do_both(
+    fn do_both<T: Clone + core::fmt::Debug + Eq>(
         self,
-        state: &DropCheck,
-        a: &mut Deque<Pair>,
-        b: &mut VecDeque<Pair>,
+        mut generate: impl FnMut() -> T,
+        a: &mut Deque<T>,
+        b: &mut VecDeque<T>,
     ) {
         match self {
             Action::PushBack => {
-                let value = state.pair();
+                let value = generate();
                 a.push_back(value.clone());
                 b.push_back(value);
             }
             Action::PushFront => {
-                let value = state.pair();
+                let value = generate();
                 a.push_front(value.clone());
                 b.push_front(value);
             }
@@ -225,10 +225,10 @@ impl Action {
                 assert_eq!(a.back_mut(), b.back_mut());
             }
             Action::Fill => {
-                let value = state.pair();
+                let value = generate();
                 a.push_front(value.clone());
                 b.push_front(value);
-                let value = state.pair();
+                let value = generate();
                 a.push_back(value.clone());
                 b.push_back(value);
             }
@@ -245,6 +245,18 @@ fn fuzzy() {
 
     for _ in 0..10000 {
         let action = Action::from_num(rand.rand_u64());
-        action.do_both(&drop_check, &mut a, &mut b);
+        action.do_both(|| drop_check.pair(), &mut a, &mut b);
+    }
+}
+
+#[test]
+fn fuzzy_zst() {
+    let mut rand = oorandom::Rand64::new(0);
+    let mut a = Deque::new();
+    let mut b = VecDeque::new();
+
+    for _ in 0..10000 {
+        let action = Action::from_num(rand.rand_u64());
+        action.do_both(|| (), &mut a, &mut b);
     }
 }

@@ -17,7 +17,7 @@ impl Size for InChunk {
 }
 
 /// This value from `_GLIBCXX_DEQUE_BUF_SIZE`
-const _DEQUE_CHUNK_SIZE: usize = 512;
+const DEQUE_CHUNK_SIZE: usize = 512;
 
 mod layout {
     use alloc::alloc::Layout;
@@ -37,6 +37,22 @@ mod layout {
 }
 
 impl LayoutInfo {
+    pub(crate) const fn auto<T>() -> LayoutInfo {
+        let size = if size_of::<T>() < DEQUE_CHUNK_SIZE && size_of::<T>() != 0
+        {
+            DEQUE_CHUNK_SIZE / size_of::<T>()
+        } else {
+            1
+        };
+        assert!(size <= InChunk::MAX as usize, "chunk size overflow",);
+        LayoutInfo(size as u16)
+    }
+
+    pub(crate) const fn with(size: InChunk) -> LayoutInfo {
+        assert!(size != 0, "chunk size by zero");
+        LayoutInfo(size)
+    }
+
     pub fn for_inc(self, side: &mut InChunk) -> bool {
         debug_assert_ne!(self.count(), 0);
         debug_assert!(side.size() <= self.count(), "{side}");
@@ -81,10 +97,6 @@ impl<T> core::fmt::Debug for Chunk<T> {
 }
 
 impl<T> Chunk<T> {
-    pub fn layout() -> LayoutInfo {
-        LayoutInfo(4)
-    }
-
     #[allow(unused_variables)]
     #[inline(always)]
     #[track_caller]
