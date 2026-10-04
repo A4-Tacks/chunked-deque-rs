@@ -1,0 +1,26 @@
+permissions:
+  contents: write
+
+on:
+  push:
+  pull_request:
+  merge_group:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  upload-assets:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo test
+      - run: cargo check --workspace
+      - run: rustup component add miri --toolchain nightly
+      - run: cargo +nightly miri test
