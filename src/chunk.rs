@@ -1,4 +1,4 @@
-use std::ptr::NonNull;
+use core::ptr::NonNull;
 
 pub(crate) use crate::chunk::layout::LayoutInfo;
 pub(crate) type InChunk = u16;
@@ -17,7 +17,7 @@ impl Size for InChunk {
 }
 
 mod layout {
-    use std::alloc::Layout;
+    use alloc::alloc::Layout;
 
     #[derive(Debug, Clone, Copy)]
     pub(crate) struct LayoutInfo(pub(super) u16);
@@ -65,11 +65,11 @@ impl LayoutInfo {
 pub(crate) struct Chunk<T> {
     data: NonNull<T>,
     #[cfg(test)]
-    slots: std::cell::RefCell<Vec<bool>>,
+    slots: core::cell::RefCell<alloc::vec::Vec<bool>>,
 }
 
-impl<T> std::fmt::Debug for Chunk<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<T> core::fmt::Debug for Chunk<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Chunk")?;
         #[cfg(test)]
         write!(f, "{:?}", self.slots.borrow())?;
@@ -104,13 +104,13 @@ impl<T> Chunk<T> {
     }
 
     pub fn new(info: LayoutInfo) -> Self {
-        let data = unsafe { std::alloc::alloc(info.get::<T>()) };
+        let data = unsafe { alloc::alloc::alloc(info.get::<T>()) };
         let data = NonNull::new(data).expect("can't alloc chunk").cast();
 
         Self {
             data,
             #[cfg(test)]
-            slots: std::cell::RefCell::new(vec![false; info.count()]),
+            slots: core::cell::RefCell::new(alloc::vec![false; info.count()]),
         }
     }
 
@@ -143,7 +143,7 @@ impl<T> Chunk<T> {
             self.expect(false, index);
         }
         unsafe {
-            std::alloc::dealloc(self.data.as_ptr().cast(), info.get::<T>())
+            alloc::alloc::dealloc(self.data.as_ptr().cast(), info.get::<T>())
         };
     }
 }

@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 use crate::chunk::{Chunk, InChunk, LayoutInfo, Size as _};
 
@@ -24,8 +24,8 @@ pub struct Deque<T> {
     left: InChunk,
 }
 
-impl<T> std::fmt::Debug for Deque<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<T> core::fmt::Debug for Deque<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Deque")
             .field("info", &self.info)
             .field("left", &self.left)

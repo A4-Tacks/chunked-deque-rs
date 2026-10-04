@@ -1,4 +1,5 @@
-use std::rc::Rc;
+use alloc::rc::Rc;
+use alloc::string::{String, ToString};
 
 use crate::deque::Deque;
 

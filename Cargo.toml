@@ -7,8 +7,8 @@ license = "MIT"
 authors = ["A4-Tacks <wdsjxhno1001@163.com>"]
 
 description = "Similar c++ std::deque, like VecDeque<Box<[T; N]>>"
-keywords = ["chunk", "deque", "queue"]
-categories = ["data-structures"]
+keywords = ["no_std", "chunk", "deque", "queue"]
+categories = ["no-std", "data-structures"]
 repository = "https://github.com/A4-Tacks/chunked-deque-rs"
 readme = "./README.md"
 
