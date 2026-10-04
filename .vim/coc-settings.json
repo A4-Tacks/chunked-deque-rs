@@ -1,0 +1,6 @@
+{
+    "[rust]": {
+        "coc.preferences.formatOnSave": true,
+        "coc.preferences.formatOnSaveTimeout": 1000
+    }
+}
