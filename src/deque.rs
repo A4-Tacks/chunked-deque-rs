@@ -39,6 +39,14 @@ impl<T> Deque<T> {
     /// # Panics
     ///
     /// Panics if `size == 0`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chunked_deque::Deque;
+    /// let deque = Deque::<i32>::with_chunksize(176);
+    /// assert_eq!(deque.chunk_size(), 176);
+    /// ```
     pub const fn with_chunksize(size: u16) -> Deque<T> {
         assert!(size != 0, "chunk size by zero");
         Self::with_layout(LayoutInfo::with(size))
