@@ -37,7 +37,7 @@ impl<T> Deque<T> {
         Self::with_layout(LayoutInfo::auto::<T>())
     }
 
-    /// Manual set chunk size.
+    /// Manual set chunk size (the number of elements stored).
     ///
     /// # Panics
     ///
@@ -105,7 +105,7 @@ impl<T> Deque<T> {
         self.len() == 0
     }
 
-    /// Chunk size of inner `VecDeque<Chunk>`.
+    /// Chunk size of inner `VecDeque<Chunk>` (the number of elements stored).
     #[inline]
     pub fn chunk_size(&self) -> usize {
         self.info.count()
