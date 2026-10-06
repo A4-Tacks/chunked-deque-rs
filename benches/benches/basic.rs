@@ -1,4 +1,7 @@
-use std::{collections::VecDeque, hint::black_box};
+use std::{
+    collections::{LinkedList, VecDeque},
+    hint::black_box,
+};
 
 use chunked_deque::Deque;
 use criterion::{Bencher, Criterion, criterion_group, criterion_main};
@@ -36,6 +39,20 @@ fn random_chunked_deque(rng: &mut ThreadRng) -> Deque<u32> {
     deque
 }
 
+fn random_linked_list_deque(rng: &mut ThreadRng) -> LinkedList<u32> {
+    let mut deque = LinkedList::new();
+
+    for _ in 0..VEC_SIZE {
+        let elem = rng.random::<u32>();
+        if &elem & 1 == 0 {
+            deque.push_back(elem);
+        } else {
+            deque.push_front(elem);
+        }
+    }
+    deque
+}
+
 fn vec_deque_push_back(b: &mut Bencher) {
     let mut rng = rand::rng();
     let mut datas = vec![];
@@ -59,6 +76,25 @@ fn chunked_deque_push_back(b: &mut Bencher) {
     let mut rng = rand::rng();
     let mut datas = vec![];
     let deque = Deque::new();
+
+    for _ in 0..VEC_SIZE {
+        datas.push(rng.random::<u32>());
+    }
+    b.iter_batched_ref(
+        || deque.clone(),
+        |deque| {
+            for &elem in &datas {
+                deque.push_back(elem);
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn linked_list_deque_push_back(b: &mut Bencher) {
+    let mut rng = rand::rng();
+    let mut datas = vec![];
+    let deque = LinkedList::new();
 
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
@@ -177,6 +213,20 @@ fn chunked_deque_pop_back(b: &mut Bencher) {
 
     b.iter_batched_ref(
         || random_chunked_deque(&mut rng),
+        |deque| {
+            while !deque.is_empty() {
+                black_box(deque.pop_back());
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn linked_list_deque_pop_back(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_linked_list_deque(&mut rng),
         |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_back());
@@ -392,10 +442,10 @@ fn criterion_benchmark(c: &mut Criterion) {
         }};
     }
 
-    bench!(vec_deque_push_back, chunked_deque_push_back);
+    bench!(vec_deque_push_back, chunked_deque_push_back, linked_list_deque_push_back);
     bench!(vec_deque_push_front, chunked_deque_push_front);
     bench!(vec_deque_push_mixed, chunked_deque_push_mixed);
-    bench!(vec_deque_pop_back, chunked_deque_pop_back);
+    bench!(vec_deque_pop_back, chunked_deque_pop_back, linked_list_deque_pop_back);
     bench!(vec_deque_pop_front, chunked_deque_pop_front);
     bench!(vec_deque_get, chunked_deque_get);
     bench!(vec_deque_read_front, chunked_deque_read_front);
