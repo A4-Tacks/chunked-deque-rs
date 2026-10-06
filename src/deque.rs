@@ -152,7 +152,9 @@ impl<T> Deque<T> {
     pub fn pop_back(&mut self) -> Option<T> {
         let value = unsafe { self.chunks.back_mut()?.take(self.right.size()) };
         if self.pop_is_empty() || self.info.for_dec(&mut self.right) {
-            unsafe { self.chunks.pop_back().unwrap_unchecked().dealloc(self.info) };
+            unsafe {
+                self.chunks.pop_back().unwrap_unchecked().dealloc(self.info)
+            };
         }
         Some(value)
     }
@@ -186,7 +188,9 @@ impl<T> Deque<T> {
     pub fn pop_front(&mut self) -> Option<T> {
         let value = unsafe { self.chunks.front_mut()?.take(self.left.size()) };
         if self.pop_is_empty() || self.info.for_inc(&mut self.left) {
-            unsafe { self.chunks.pop_front().unwrap_unchecked().dealloc(self.info) };
+            unsafe {
+                self.chunks.pop_front().unwrap_unchecked().dealloc(self.info)
+            };
         }
         Some(value)
     }
