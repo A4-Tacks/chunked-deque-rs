@@ -4,7 +4,7 @@ use chunked_deque::Deque;
 use criterion::{Bencher, Criterion, criterion_group, criterion_main};
 use rand::RngExt;
 
-const VEC_SIZE: usize = 1024*10;
+const VEC_SIZE: usize = 1024 * 10;
 const BATCH_SIZE: criterion::BatchSize = criterion::BatchSize::SmallInput;
 
 fn vec_deque_push_back(b: &mut Bencher) {
@@ -15,9 +15,9 @@ fn vec_deque_push_back(b: &mut Bencher) {
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             for &elem in &datas {
                 deque.push_back(elem);
             }
@@ -34,9 +34,9 @@ fn chunked_deque_push_back(b: &mut Bencher) {
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             for &elem in &datas {
                 deque.push_back(elem);
             }
@@ -53,9 +53,9 @@ fn vec_deque_push_front(b: &mut Bencher) {
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             for &elem in &datas {
                 deque.push_front(elem);
             }
@@ -72,9 +72,9 @@ fn chunked_deque_push_front(b: &mut Bencher) {
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             for &elem in &datas {
                 deque.push_front(elem);
             }
@@ -91,9 +91,9 @@ fn vec_deque_push_mixed(b: &mut Bencher) {
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             for &elem in &datas {
                 if &elem & 1 == 0 {
                     deque.push_back(elem);
@@ -114,9 +114,9 @@ fn chunked_deque_push_mixed(b: &mut Bencher) {
     for _ in 0..VEC_SIZE {
         datas.push(rng.random::<u32>());
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             for &elem in &datas {
                 if &elem & 1 == 0 {
                     deque.push_back(elem);
@@ -141,9 +141,9 @@ fn vec_deque_pop_back(b: &mut Bencher) {
             deque.push_front(elem);
         }
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_back());
             }
@@ -164,9 +164,9 @@ fn chunked_deque_pop_back(b: &mut Bencher) {
             deque.push_front(elem);
         }
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_back());
             }
@@ -187,9 +187,9 @@ fn vec_deque_pop_front(b: &mut Bencher) {
             deque.push_front(elem);
         }
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_front());
             }
@@ -210,9 +210,9 @@ fn chunked_deque_pop_front(b: &mut Bencher) {
             deque.push_front(elem);
         }
     }
-    b.iter_batched(
+    b.iter_batched_ref(
         || deque.clone(),
-        |mut deque| {
+        |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_front());
             }
