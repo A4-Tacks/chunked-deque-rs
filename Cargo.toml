@@ -15,5 +15,8 @@ readme = "./README.md"
 [package.metadata.docs.rs]
 all-features = true
 
+[workspace]
+members = ["benches"]
+
 [dev-dependencies]
 oorandom = "11.1.5"
