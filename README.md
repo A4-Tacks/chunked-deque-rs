@@ -7,6 +7,9 @@ Similar C++ `std::deque`, repr like `VecDeque<Box<[T; N]>>`
 
 Level 2 buffer deque, like `LinkedList` timely release of reserves, like `VecDeque` cache friendly
 
+This crate has not been fully optimized, I believe its performance can be improved
+
 ## Info
 - Miri passed
-- Bench missing
+- Due timely release of reserves, pop is a bit slow
+- Due 'chunked', `get` methods very slow
