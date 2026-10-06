@@ -418,31 +418,8 @@ fn chunked_deque_iterate_rev(b: &mut Bencher) {
     );
 }
 
-fn share_suffix<'a>(s: &[&'a str]) -> &'a str {
-    let mut first = *s.first().unwrap();
-    for s in s.iter().skip(1) {
-        while !first.is_empty() && !s.ends_with(first) {
-            first = &first[1..];
-        }
-    }
-    first = first.trim_start_matches('_');
-    assert_ne!(first, "");
-    first
-}
-
 fn criterion_benchmark(c: &mut Criterion) {
-    macro_rules! bench {
-        ($($id:ident),+) => {{
-            let share = share_suffix(&[$(stringify!($id)),+]);
-            let name = |s: &'static str| s.strip_suffix(share).unwrap().trim_end_matches('_');
-            let mut group = c.benchmark_group(share);
-            $(
-                #[allow(unreachable_code)]
-                let _ = || $id(loop {});
-                group.bench_function(name(stringify!($id)), $id);
-            )+
-        }};
-    }
+    benches::bench_caller!(c($));
 
     bench!(vec_deque_push_back, chunked_deque_push_back, linked_list_deque_push_back);
     bench!(vec_deque_push_front, chunked_deque_push_front);
