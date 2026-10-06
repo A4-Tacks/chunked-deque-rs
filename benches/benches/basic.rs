@@ -221,29 +221,35 @@ fn chunked_deque_pop_front(b: &mut Bencher) {
     );
 }
 
+fn share_suffix<'a>(s: &[&'a str]) -> &'a str {
+    let mut first = *s.first().unwrap();
+    for s in s.iter().skip(1) {
+        while !first.is_empty() && !s.ends_with(first) {
+            first = &first[1..];
+        }
+    }
+    first = first.trim_start_matches('_');
+    assert_ne!(first, "");
+    first
+}
+
 fn criterion_benchmark(c: &mut Criterion) {
     macro_rules! bench {
-        ($id:ident) => {
-            #[allow(unreachable_code)]
-            let _ = || $id(loop {});
-            c.bench_function(stringify!($id), $id);
-        };
+        ($($id:ident),+) => {{
+            let mut group = c.benchmark_group(share_suffix(&[$(stringify!($id)),+]));
+            $(
+                #[allow(unreachable_code)]
+                let _ = || $id(loop {});
+                group.bench_function(stringify!($id), $id);
+            )+
+        }};
     }
 
-    bench!(vec_deque_push_back);
-    bench!(chunked_deque_push_back);
-
-    bench!(vec_deque_push_front);
-    bench!(chunked_deque_push_front);
-
-    bench!(vec_deque_push_mixed);
-    bench!(chunked_deque_push_mixed);
-
-    bench!(vec_deque_pop_back);
-    bench!(chunked_deque_pop_back);
-
-    bench!(vec_deque_pop_front);
-    bench!(chunked_deque_pop_front);
+    bench!(vec_deque_push_back, chunked_deque_push_back);
+    bench!(vec_deque_push_front, chunked_deque_push_front);
+    bench!(vec_deque_push_mixed, chunked_deque_push_mixed);
+    bench!(vec_deque_pop_back, chunked_deque_pop_back);
+    bench!(vec_deque_pop_front, chunked_deque_pop_front);
 }
 
 criterion_group!(benches, criterion_benchmark);
