@@ -7,7 +7,10 @@ use crate::Deque;
 impl<T: Clone> Clone for Deque<T> {
     fn clone(&self) -> Self {
         // XXX: perf
-        self.iter().cloned().collect()
+        let mut deque =
+            Deque::with_chunksize(self.chunk_size().try_into().unwrap());
+        deque.extend(self.iter().cloned());
+        deque
     }
 }
 
