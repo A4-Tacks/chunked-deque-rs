@@ -12,4 +12,4 @@ This crate has not been fully optimized, I believe its performance can be improv
 ## Info
 - Miri passed
 - Due timely release of reserves, pop is a bit slow
-- Due 'chunked', `get` methods very slow
+- Due 'chunked', `get` methods slow about 2x
