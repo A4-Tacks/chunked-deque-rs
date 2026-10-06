@@ -433,11 +433,13 @@ fn share_suffix<'a>(s: &[&'a str]) -> &'a str {
 fn criterion_benchmark(c: &mut Criterion) {
     macro_rules! bench {
         ($($id:ident),+) => {{
-            let mut group = c.benchmark_group(share_suffix(&[$(stringify!($id)),+]));
+            let share = share_suffix(&[$(stringify!($id)),+]);
+            let name = |s: &'static str| s.strip_suffix(share).unwrap().trim_end_matches('_');
+            let mut group = c.benchmark_group(share);
             $(
                 #[allow(unreachable_code)]
                 let _ = || $id(loop {});
-                group.bench_function(stringify!($id), $id);
+                group.bench_function(name(stringify!($id)), $id);
             )+
         }};
     }
