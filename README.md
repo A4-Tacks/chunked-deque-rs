@@ -11,5 +11,7 @@ This crate has not been fully optimized, I believe its performance can be improv
 
 ## Info
 - Miri passed
-- Due timely release of reserves, pop is a bit slow
-- Due 'chunked', `get` methods slow about 2x
+
+## Benches (min struct)
+- Due timely release of reserves, pop is a bit slow (about 1.5x to 2.5x, LinkedList is 10x)
+- Due 'chunked', `get` methods slow (about 2x, LinkedList is 20x)

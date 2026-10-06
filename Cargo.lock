@@ -69,7 +69,7 @@ dependencies = [
 
 [[package]]
 name = "chunked-deque"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "oorandom",
 ]
