@@ -312,6 +312,62 @@ fn chunked_deque_read_back(b: &mut Bencher) {
     );
 }
 
+fn vec_deque_iterate(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_vec_deque(&mut rng),
+        |deque| {
+            for elem in deque {
+                black_box(elem);
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn chunked_deque_iterate(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_chunked_deque(&mut rng),
+        |deque| {
+            for elem in deque {
+                black_box(elem);
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn vec_deque_iterate_rev(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_vec_deque(&mut rng),
+        |deque| {
+            for elem in deque.iter().rev() {
+                black_box(elem);
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn chunked_deque_iterate_rev(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_chunked_deque(&mut rng),
+        |deque| {
+            for elem in deque.iter().rev() {
+                black_box(elem);
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
 fn share_suffix<'a>(s: &[&'a str]) -> &'a str {
     let mut first = *s.first().unwrap();
     for s in s.iter().skip(1) {
@@ -344,6 +400,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     bench!(vec_deque_get, chunked_deque_get);
     bench!(vec_deque_read_front, chunked_deque_read_front);
     bench!(vec_deque_read_back, chunked_deque_read_back);
+    bench!(vec_deque_iterate, chunked_deque_iterate);
+    bench!(vec_deque_iterate_rev, chunked_deque_iterate_rev);
 }
 
 criterion_group!(benches, criterion_benchmark);
