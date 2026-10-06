@@ -29,11 +29,11 @@ mod layout {
 
     impl LayoutInfo {
         fn get<T>(self) -> Layout {
-            Layout::array::<T>(self.0.into()).unwrap()
+            Layout::array::<T>(self.count()).unwrap()
         }
 
         pub fn count(self) -> usize {
-            self.0.into()
+            self.0 as usize
         }
 
         pub(super) unsafe fn alloc<T>(self) -> NonNull<T> {
@@ -65,7 +65,7 @@ impl LayoutInfo {
             1
         };
         assert!(size <= InChunk::MAX as usize, "chunk size overflow",);
-        LayoutInfo(size as u16)
+        LayoutInfo(size as InChunk)
     }
 
     pub(crate) const fn with(size: InChunk) -> LayoutInfo {

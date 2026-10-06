@@ -258,6 +258,8 @@ fn fuzzy_zst() {
     for _ in 0..10000 {
         let action = Action::from_num(rand.rand_u64());
         action.do_both(|| (), &mut a, &mut b);
+
+        assert_eq!(a.len() == 0, a.is_empty());
     }
 }
 
