@@ -13,5 +13,13 @@ name = "basic"
 harness = false
 
 [[bench]]
+name = "mixed"
+harness = false
+
+[[bench]]
+name = "view"
+harness = false
+
+[[bench]]
 name = "other_sizes"
 harness = false

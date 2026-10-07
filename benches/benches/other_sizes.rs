@@ -1,11 +1,4 @@
-use std::{collections::VecDeque, hint::black_box};
-
-use chunked_deque::Deque;
-use criterion::{Bencher, Criterion, criterion_group, criterion_main};
-use rand::{RngExt, rngs::ThreadRng};
-
-const VEC_SIZE: usize = 1024 * 10;
-const BATCH_SIZE: criterion::BatchSize = criterion::BatchSize::SmallInput;
+use benches::*;
 
 #[derive(Debug, Clone)]
 struct Medium {
@@ -19,7 +12,7 @@ struct Large {
     _f: [String; 48],
 }
 
-fn random_vec_deque<T>(rng: &mut ThreadRng, f: fn(u32) -> T) -> VecDeque<T> {
+fn random_vec_deque_as<T>(rng: &mut ThreadRng, f: fn(u32) -> T) -> VecDeque<T> {
     let mut deque = VecDeque::new();
 
     for _ in 0..VEC_SIZE {
@@ -33,7 +26,7 @@ fn random_vec_deque<T>(rng: &mut ThreadRng, f: fn(u32) -> T) -> VecDeque<T> {
     deque
 }
 
-fn random_chunked_deque<T>(rng: &mut ThreadRng, f: fn(u32) -> T) -> Deque<T> {
+fn random_chunked_deque_as<T>(rng: &mut ThreadRng, f: fn(u32) -> T) -> Deque<T> {
     let mut deque = Deque::new();
 
     for _ in 0..VEC_SIZE {
@@ -89,7 +82,7 @@ fn vec_deque_pop_back<T: Clone>(b: &mut Bencher, f: fn(u32) -> T) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng, f),
+        || random_vec_deque_as(&mut rng, f),
         |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_back());
@@ -103,7 +96,7 @@ fn chunked_deque_pop_back<T: Clone>(b: &mut Bencher, f: fn(u32) -> T) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_chunked_deque(&mut rng, f),
+        || random_chunked_deque_as(&mut rng, f),
         |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_back());
@@ -176,7 +169,7 @@ fn chunked_deque_pop_back_large(b: &mut Bencher) {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    benches::bench_caller!(c($));
+    bench_caller!(c($));
 
     bench!(vec_deque_push_back_string, chunked_deque_push_back_string);
     bench!(vec_deque_push_back_medium, chunked_deque_push_back_medium);
