@@ -17,6 +17,7 @@ pub struct Deque<T> {
     chunks: VecDeque<Chunk<T>>,
     right: InChunk,
     left: InChunk,
+    len: usize,
 }
 
 impl<T: core::fmt::Debug> core::fmt::Debug for Deque<T> {
@@ -61,6 +62,7 @@ impl<T> Deque<T> {
             chunks: VecDeque::new(),
             right: 0,
             left: 0,
+            len: 0,
         }
     }
 
@@ -87,17 +89,22 @@ impl<T> Deque<T> {
     /// ```
     #[must_use]
     pub fn len(&self) -> usize {
-        match self.chunks.len() {
-            0 => 0,
-            1 => (self.right - self.left + 1).size(),
-            chunks => {
-                let count = self.info.count();
-                (chunks - 2) * count
-                    + (count - self.left.size())
-                    + self.right.size()
-                    + 1
-            }
+        #[cfg(debug_assertions)]
+        {
+            let expect = match self.chunks.len() {
+                0 => 0,
+                1 => (self.right - self.left + 1).size(),
+                chunks => {
+                    let count = self.info.count();
+                    (chunks - 2) * count
+                        + (count - self.left.size())
+                        + self.right.size()
+                        + 1
+                }
+            };
+            assert_eq!(self.len, expect);
         }
+        self.len
     }
 
     #[must_use]
@@ -140,6 +147,7 @@ impl<T> Deque<T> {
         if self.chunks.is_empty() || self.info.for_inc(&mut self.right) {
             self.chunks.push_back(Chunk::new(self.info));
         }
+        self.len += 1;
         unsafe {
             self.chunks
                 .back_mut()
@@ -156,6 +164,7 @@ impl<T> Deque<T> {
                 self.chunks.pop_back().unwrap_unchecked().dealloc(self.info)
             };
         }
+        self.len -= 1;
         Some(value)
     }
 
@@ -176,6 +185,7 @@ impl<T> Deque<T> {
         if self.chunks.is_empty() || self.info.for_dec(&mut self.left) {
             self.chunks.push_front(Chunk::new(self.info));
         }
+        self.len += 1;
         unsafe {
             self.chunks
                 .front_mut()
@@ -192,12 +202,17 @@ impl<T> Deque<T> {
                 self.chunks.pop_front().unwrap_unchecked().dealloc(self.info)
             };
         }
+        self.len -= 1;
         Some(value)
     }
 
     #[inline(always)]
     fn pop_is_empty(&self) -> bool {
-        self.chunks.len() == 1 && self.left == self.right
+        debug_assert_eq!(
+            self.len == 1,
+            self.chunks.len() == 1 && self.left == self.right
+        );
+        self.len == 1
     }
 
     /// Iterate all elements.
