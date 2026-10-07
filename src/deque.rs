@@ -27,6 +27,7 @@ impl<T: core::fmt::Debug> core::fmt::Debug for Deque<T> {
 
 impl<T> Drop for Deque<T> {
     fn drop(&mut self) {
+        // FIXME: 如果只有一个值panic了, drop应该继续进行
         while self.pop_back().is_some() {}
     }
 }
