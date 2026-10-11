@@ -1,4 +1,5 @@
 #!/bin/jq -nrRf
+def trim: gsub("^\\s+|\\s+$";"");
 def group_by(f): reduce .[] as $item ({}; .[$item|f]+=[$item]) | map(.);
 [
   foreach inputs as $line ([""];[last, $line];
