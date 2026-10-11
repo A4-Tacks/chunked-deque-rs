@@ -22,4 +22,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cargo bench --package benches | tee out
-      - run: ./benches/difference.jq < out
+      - run: ./benches/difference.jq out
