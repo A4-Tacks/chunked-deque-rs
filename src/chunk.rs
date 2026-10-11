@@ -171,6 +171,18 @@ impl<T> Chunk<T> {
     }
 
     #[track_caller]
+    pub unsafe fn drop_in_place(&mut self, start: usize, end: usize) {
+        let slice = unsafe { self.slice(start, end) };
+
+        #[cfg(test)]
+        for index in start..end {
+            self.flip_expect(true, index);
+        }
+
+        unsafe { slice.drop_in_place() };
+    }
+
+    #[track_caller]
     pub unsafe fn iter(
         &self,
         start: usize,

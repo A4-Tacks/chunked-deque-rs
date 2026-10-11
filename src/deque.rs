@@ -27,8 +27,7 @@ impl<T: core::fmt::Debug> core::fmt::Debug for Deque<T> {
 
 impl<T> Drop for Deque<T> {
     fn drop(&mut self) {
-        // FIXME: 如果只有一个值panic了, drop应该继续进行
-        while self.pop_back().is_some() {}
+        self.clear();
     }
 }
 
@@ -292,6 +291,107 @@ impl<T> Deque<T> {
                     .get(offset % chunk_size)
                     .as_mut(),
             )
+        }
+    }
+
+    /// Clears the deque, removing all elements.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chunked_deque::Deque;
+    /// let mut deque = Deque::from_iter(0..5);
+    /// assert_eq!(deque, &[0, 1, 2, 3, 4]);
+    /// deque.clear();
+    /// assert_eq!(deque, &[]);
+    /// ```
+    pub fn clear(&mut self) {
+        struct Guard<'a, T> {
+            deque: &'a mut Deque<T>,
+            needs_front: bool,
+            needs_back: bool,
+            dealloc: Option<Chunk<T>>,
+        }
+        impl<'a, T> Guard<'a, T> {
+            fn process(&mut self) -> bool {
+                let Guard {
+                    deque,
+                    needs_front,
+                    needs_back,
+                    dealloc,
+                } = self;
+                let chunk_size = deque.info.count();
+
+                if let Some(chunk) = dealloc.take() {
+                    unsafe { chunk.dealloc(deque.info) };
+                    return true;
+                }
+                let mut dealloc = |chunk, start, end| {
+                    debug_assert!(dealloc.is_none());
+                    unsafe {
+                        dealloc.get_or_insert(chunk).drop_in_place(start, end);
+                    }
+                };
+
+                if core::mem::take(needs_front) {
+                    if let Some((front, range)) = deque.pop_chunk::<false>() {
+                        dealloc(front, range.start, range.end);
+                    }
+                    return true;
+                }
+
+                if core::mem::take(needs_back) {
+                    if let Some((back, range)) = deque.pop_chunk::<true>() {
+                        dealloc(back, range.start, range.end);
+                    }
+                    return true;
+                }
+
+                if let Some((chunk, range)) = deque.pop_chunk::<true>() {
+                    debug_assert_eq!(range, 0..deque.chunk_size());
+                    dealloc(chunk, 0, chunk_size);
+                    return true;
+                }
+
+                debug_assert_eq!(deque.left, deque.right);
+                !deque.chunks.is_empty()
+            }
+        }
+        let mut guard = Guard {
+            deque: self,
+            needs_front: true,
+            needs_back: true,
+            dealloc: None,
+        };
+        while guard.process() {}
+    }
+
+    fn pop_chunk<const IS_BACK: bool>(
+        &mut self,
+    ) -> Option<(Chunk<T>, core::ops::Range<usize>)> {
+        match self.chunks.len() {
+            0 => None,
+            1 => {
+                let range = self.left.size()..self.right.size() + 1;
+                self.left = self.right;
+                let chunk =
+                    unsafe { self.chunks.pop_back().unwrap_unchecked() };
+                Some((chunk, range))
+            }
+            _ if IS_BACK => {
+                let range = 0..self.right.size() + 1;
+                let chunk =
+                    unsafe { self.chunks.pop_back().unwrap_unchecked() };
+                self.right = self.chunk_size() as InChunk - 1;
+                Some((chunk, range))
+            }
+            _ => {
+                let range = self.left.size()..self.info.count();
+                let chunk =
+                    unsafe { self.chunks.pop_front().unwrap_unchecked() };
+                self.left = 0;
+                Some((chunk, range))
+            }
         }
     }
 }

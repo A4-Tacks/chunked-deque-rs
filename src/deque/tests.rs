@@ -170,6 +170,41 @@ fn test_iter_mix() {
     }
 }
 
+#[test]
+fn test_clear_unwind_safe() {
+    struct PanicFour(Pair);
+    impl Drop for PanicFour {
+        fn drop(&mut self) {
+            assert_ne!(self.0.1, 4, "four hit")
+        }
+    }
+    let droper = DropCheck::new();
+    let datas = (0..7).map(|_| PanicFour(droper.pair()));
+    let mut deque = Deque::from_iter(datas);
+    let resp = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        deque.clear();
+    }));
+    assert!(resp.is_err());
+    assert_eq!(deque.len(), 0);
+}
+
+#[test]
+fn test_drop_unwind_safe() {
+    struct PanicFour(Pair);
+    impl Drop for PanicFour {
+        fn drop(&mut self) {
+            assert_ne!(self.0.1, 4, "four hit")
+        }
+    }
+    let droper = DropCheck::new();
+    let datas = (0..7).map(|_| PanicFour(droper.pair()));
+    let deque = Deque::from_iter(datas);
+    let resp = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        drop(deque);
+    }));
+    assert!(resp.is_err());
+}
+
 #[derive(Debug)]
 enum Action {
     PushBack,
@@ -182,11 +217,12 @@ enum Action {
     Fill,
     Iter,
     Create,
+    Clear,
 }
 
 impl Action {
     fn from_num(n: u64) -> Action {
-        match n % 10 {
+        match n % 11 {
             0 => Self::PushBack,
             1 => Self::PushFront,
             2 => Self::PopBack,
@@ -197,12 +233,13 @@ impl Action {
             7 => Self::Fill,
             8 => Self::Iter,
             9 => Self::Create,
+            10 => Self::Clear,
             _ => unreachable!(),
         }
     }
 
     fn do_both<T: Clone + core::fmt::Debug + Ord>(
-        self,
+        &self,
         mut generate: impl FnMut() -> T,
         a: &mut Deque<T>,
         b: &mut VecDeque<T>,
@@ -268,12 +305,17 @@ impl Action {
                 *b = Default::default();
                 assert_eq!(a.len(), b.len());
             }
+            Action::Clear => {
+                a.clear();
+                b.clear();
+                assert_eq!(a.len(), b.len());
+            }
         }
     }
 }
 
 #[test]
-fn fuzzy() {
+fn fuzzy_norm() {
     let drop_check = DropCheck::new();
     let mut rand = oorandom::Rand64::new(0);
 
