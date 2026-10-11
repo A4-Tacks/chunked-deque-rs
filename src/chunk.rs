@@ -103,8 +103,6 @@ impl LayoutInfo {
 
 pub(crate) struct Chunk<T> {
     data: NonNull<T>,
-    #[cfg(test)]
-    slots: core::cell::RefCell<alloc::vec::Vec<bool>>,
 }
 unsafe impl<T: Sync> Sync for Chunk<T> {}
 unsafe impl<T: Send> Send for Chunk<T> {}
@@ -112,47 +110,21 @@ unsafe impl<T: Send> Send for Chunk<T> {}
 impl<T> core::fmt::Debug for Chunk<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Chunk")?;
-        #[cfg(test)]
-        write!(f, "{:?}", self.slots.borrow())?;
         Ok(())
     }
 }
 
 impl<T> Chunk<T> {
-    #[allow(unused_variables)]
-    #[inline(always)]
-    #[track_caller]
-    fn expect(&self, expect: bool, index: usize) {
-        #[cfg(test)]
-        {
-            assert_eq!(self.slots.borrow()[index], expect, "index: {index}");
-        }
-    }
-
-    #[allow(unused_variables)]
-    #[inline(always)]
-    #[track_caller]
-    fn flip_expect(&self, expect: bool, index: usize) {
-        #[cfg(test)]
-        {
-            self.expect(expect, index);
-            self.slots.borrow_mut()[index] = !expect;
-        }
-    }
-
     pub fn new(info: LayoutInfo) -> Self {
         let data = unsafe { info.alloc() };
 
         Self {
             data,
-            #[cfg(test)]
-            slots: core::cell::RefCell::new(alloc::vec![false; info.count()]),
         }
     }
 
     #[track_caller]
     pub unsafe fn get(&self, index: usize) -> NonNull<T> {
-        self.expect(true, index);
         unsafe { self.data.add(index) }
     }
 
@@ -163,8 +135,6 @@ impl<T> Chunk<T> {
         end: usize,
     ) -> core::slice::Iter<'_, T> {
         if start < end {
-            self.expect(true, start);
-            self.expect(true, end - 1);
             unsafe {
                 let data = self.data.add(start);
                 core::ptr::slice_from_raw_parts(
@@ -186,8 +156,6 @@ impl<T> Chunk<T> {
         end: usize,
     ) -> core::slice::IterMut<'_, T> {
         if start < end {
-            self.expect(true, start);
-            self.expect(true, end - 1);
             unsafe {
                 let data = self.data.add(start);
                 core::ptr::slice_from_raw_parts_mut(data.as_ptr(), end - start)
@@ -201,26 +169,16 @@ impl<T> Chunk<T> {
 
     #[track_caller]
     pub fn write(&mut self, index: usize, value: T) {
-        self.flip_expect(false, index);
         unsafe { self.get(index).write(value) };
     }
 
     #[track_caller]
     pub unsafe fn take(&mut self, index: usize) -> T {
-        self.expect(true, index);
-        unsafe {
-            let get = self.get(index);
-            self.flip_expect(true, index);
-            get.read()
-        }
+        unsafe { self.get(index).read() }
     }
 
     #[track_caller]
     pub unsafe fn dealloc(self, info: LayoutInfo) {
-        #[cfg(test)]
-        for index in 0..self.slots.borrow().len() {
-            self.expect(false, index);
-        }
         unsafe {
             info.dealloc(self.data);
         };
