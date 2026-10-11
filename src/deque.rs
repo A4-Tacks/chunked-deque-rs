@@ -1,3 +1,5 @@
+use core::ptr::NonNull;
+
 use alloc::collections::VecDeque;
 
 use crate::chunk::{Chunk, InChunk, LayoutInfo, Size as _};
@@ -17,6 +19,8 @@ pub struct Deque<T> {
     chunks: VecDeque<Chunk<T>>,
     right: InChunk,
     left: InChunk,
+    front: NonNull<T>,
+    back: NonNull<T>,
 }
 
 impl<T: core::fmt::Debug> core::fmt::Debug for Deque<T> {
@@ -62,6 +66,8 @@ impl<T> Deque<T> {
             chunks: VecDeque::new(),
             right: 0,
             left: 0,
+            back: NonNull::dangling(),
+            front: NonNull::dangling(),
         }
     }
 
@@ -124,81 +130,170 @@ impl<T> Deque<T> {
         self.chunks.capacity()
     }
 
+    #[inline(always)]
+    fn pop_is_empty(&self) -> bool {
+        if size_of::<T>() == 0 {
+            self.chunks.len() == 1 && self.left == self.right
+        } else {
+            debug_assert_eq!(
+                self.back == self.front,
+                self.left == self.right && self.chunks.len() <= 1,
+            );
+            self.front == self.back
+        }
+    }
+
+    fn for_push<const IS_BACK: bool>(&mut self) {
+        if self.is_empty() {
+            debug_assert_eq!(self.left, self.right);
+            debug_assert_eq!(self.front, self.back);
+
+            let chunk = Chunk::new(self.info);
+            self.back = unsafe { chunk.get(self.right.size()) };
+            self.front = self.back;
+            self.chunks.push_back(chunk);
+        } else if IS_BACK {
+            if self.info.for_inc(&mut self.right) {
+                let chunk = Chunk::new(self.info);
+                self.back = unsafe { chunk.get(self.right.size()) };
+                self.chunks.push_back(chunk);
+            } else {
+                self.back = unsafe { self.back.add(1) };
+            }
+        } else {
+            if self.info.for_dec(&mut self.left) {
+                let chunk = Chunk::new(self.info);
+                self.front = unsafe { chunk.get(self.left.size()) };
+                self.chunks.push_front(chunk);
+            } else {
+                self.front = unsafe { self.front.sub(1) };
+            }
+        }
+    }
+
+    fn for_pop<const IS_BACK: bool>(&mut self) -> Option<T> {
+        if self.chunks.is_empty() {
+            return None;
+        }
+        let value = unsafe {
+            if IS_BACK { self.back.read() } else { self.front.read() }
+        };
+        if self.pop_is_empty() {
+            unsafe {
+                self.chunks.pop_back().unwrap_unchecked().dealloc(self.info)
+            };
+        } else if IS_BACK {
+            if self.info.for_dec(&mut self.right) {
+                unsafe {
+                    self.chunks
+                        .pop_back()
+                        .unwrap_unchecked()
+                        .dealloc(self.info);
+                    self.back = self
+                        .chunks
+                        .back()
+                        .unwrap_unchecked()
+                        .get(self.right.size());
+                }
+            } else {
+                self.back = unsafe { self.back.sub(1) };
+            }
+        } else {
+            if self.info.for_inc(&mut self.left) {
+                unsafe {
+                    self.chunks
+                        .pop_front()
+                        .unwrap_unchecked()
+                        .dealloc(self.info);
+                    self.front = self
+                        .chunks
+                        .front()
+                        .unwrap_unchecked()
+                        .get(self.left.size());
+                }
+            } else {
+                self.front = unsafe { self.front.add(1) };
+            }
+        }
+        Some(value)
+    }
+
     /// Last element.
     pub fn back(&self) -> Option<&T> {
-        Some(unsafe { self.chunks.back()?.get(self.right.size()).as_ref() })
+        if self.is_empty() {
+            return None;
+        }
+        unsafe {
+            debug_assert_eq!(
+                self.chunks.back()?.get(self.right.size()),
+                self.back,
+            );
+            Some(self.back.as_ref())
+        }
     }
 
     /// Last element with mutable reference.
     pub fn back_mut(&mut self) -> Option<&mut T> {
-        Some(unsafe {
-            self.chunks.back_mut()?.get(self.right.size()).as_mut()
-        })
+        if self.is_empty() {
+            return None;
+        }
+        unsafe {
+            debug_assert_eq!(
+                self.chunks.back()?.get(self.right.size()),
+                self.back,
+            );
+            Some(self.back.as_mut())
+        }
     }
 
     /// Push to last element.
     pub fn push_back(&mut self, value: T) {
-        if self.chunks.is_empty() || self.info.for_inc(&mut self.right) {
-            self.chunks.push_back(Chunk::new(self.info));
-        }
-        unsafe {
-            self.chunks
-                .back_mut()
-                .unwrap_unchecked()
-                .write(self.right.size(), value);
-        }
+        self.for_push::<true>();
+        unsafe { self.back.write(value) };
     }
 
     /// Pop off last element.
     pub fn pop_back(&mut self) -> Option<T> {
-        let value = unsafe { self.chunks.back_mut()?.take(self.right.size()) };
-        if self.pop_is_empty() || self.info.for_dec(&mut self.right) {
-            unsafe {
-                self.chunks.pop_back().unwrap_unchecked().dealloc(self.info)
-            };
-        }
-        Some(value)
+        self.for_pop::<true>()
     }
 
     /// First element with.
     pub fn front(&self) -> Option<&T> {
-        Some(unsafe { self.chunks.front()?.get(self.left.size()).as_ref() })
+        if self.is_empty() {
+            return None;
+        }
+        unsafe {
+            debug_assert_eq!(
+                self.chunks.front()?.get(self.left.size()),
+                self.front,
+            );
+            Some(self.front.as_ref())
+        }
     }
 
     /// First element with mutable reference.
     pub fn front_mut(&mut self) -> Option<&mut T> {
-        Some(unsafe {
-            self.chunks.front_mut()?.get(self.left.size()).as_mut()
-        })
+        if self.is_empty() {
+            return None;
+        }
+        unsafe {
+            debug_assert_eq!(
+                self.chunks.front()?.get(self.left.size()),
+                self.front,
+            );
+            Some(self.front.as_mut())
+        }
     }
 
     /// Push to first element.
     pub fn push_front(&mut self, value: T) {
-        if self.chunks.is_empty() || self.info.for_dec(&mut self.left) {
-            self.chunks.push_front(Chunk::new(self.info));
-        }
-        unsafe {
-            self.chunks
-                .front_mut()
-                .unwrap_unchecked()
-                .write(self.left.size(), value);
-        }
+        self.for_push::<false>();
+        unsafe { self.front.write(value) };
     }
 
     /// Pop off first element.
     pub fn pop_front(&mut self) -> Option<T> {
-        let value = unsafe { self.chunks.front_mut()?.take(self.left.size()) };
-        if self.pop_is_empty() || self.info.for_inc(&mut self.left) {
-            unsafe {
-                self.chunks.pop_front().unwrap_unchecked().dealloc(self.info)
-            };
-        }
-        Some(value)
-    }
-
-    #[inline(always)]
-    fn pop_is_empty(&self) -> bool {
-        self.chunks.len() == 1 && self.left == self.right
+        self.for_pop::<false>()
     }
 
     /// Iterate all elements.

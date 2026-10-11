@@ -168,8 +168,12 @@ impl<T> Chunk<T> {
     }
 
     #[track_caller]
-    pub fn write(&mut self, index: usize, value: T) {
-        unsafe { self.get(index).write(value) };
+    pub fn write(&mut self, index: usize, value: T) -> NonNull<T> {
+        unsafe {
+            let ptr = self.get(index);
+            ptr.write(value);
+            ptr
+        }
     }
 
     #[track_caller]
