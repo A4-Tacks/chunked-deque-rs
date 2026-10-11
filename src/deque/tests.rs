@@ -236,14 +236,25 @@ impl Action {
                 b.push_back(value);
             }
             Self::Iter => {
+                fn cmp_iter<T: Ord>(
+                    a: impl Iterator<Item = T>,
+                    b: impl Iterator<Item = T>,
+                ) -> Ordering {
+                    if cfg!(miri) {
+                        // miri is very slow
+                        a.step_by(3).take(5).cmp(b.step_by(3).take(5))
+                    } else {
+                        a.cmp(b)
+                    }
+                }
                 assert_eq!(
-                    a.iter().cmp(b.iter()),
+                    cmp_iter(a.iter(), b.iter()),
                     Ordering::Equal,
                     "{a:?} == {b:?}:\n  iter: {:?}",
                     a.iter().collect::<VecDeque<_>>()
                 );
                 assert_eq!(
-                    a.iter().rev().cmp(b.iter().rev()),
+                    cmp_iter(a.iter().rev(), b.iter().rev()),
                     Ordering::Equal,
                     "{a:?} == {b:?}:\n  iter: {:?}",
                     a.iter().collect::<VecDeque<_>>()
