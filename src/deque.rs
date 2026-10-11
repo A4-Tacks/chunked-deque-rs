@@ -21,7 +21,7 @@ pub struct Deque<T> {
 
 impl<T: core::fmt::Debug> core::fmt::Debug for Deque<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_list().entry(&self.iter()).finish()
+        f.debug_list().entries(self.iter()).finish()
     }
 }
 
