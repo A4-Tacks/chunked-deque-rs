@@ -157,26 +157,26 @@ impl<T> Chunk<T> {
     }
 
     #[track_caller]
-    pub unsafe fn iter(
-        &self,
-        start: usize,
-        end: usize,
-    ) -> core::slice::Iter<'_, T> {
+    pub unsafe fn slice(&self, start: usize, end: usize) -> NonNull<[T]> {
         if start < end {
             self.expect(true, start);
             self.expect(true, end - 1);
             unsafe {
                 let data = self.data.add(start);
-                core::ptr::slice_from_raw_parts(
-                    data.as_ptr().cast_const(),
-                    end - start,
-                )
-                .as_ref_unchecked()
-                .iter()
+                NonNull::slice_from_raw_parts(data, end - start)
             }
         } else {
-            core::slice::Iter::default()
+            NonNull::slice_from_raw_parts(NonNull::dangling(), 0)
         }
+    }
+
+    #[track_caller]
+    pub unsafe fn iter(
+        &self,
+        start: usize,
+        end: usize,
+    ) -> core::slice::Iter<'_, T> {
+        unsafe { self.slice(start, end).as_ref().iter() }
     }
 
     #[track_caller]
@@ -185,18 +185,7 @@ impl<T> Chunk<T> {
         start: usize,
         end: usize,
     ) -> core::slice::IterMut<'_, T> {
-        if start < end {
-            self.expect(true, start);
-            self.expect(true, end - 1);
-            unsafe {
-                let data = self.data.add(start);
-                core::ptr::slice_from_raw_parts_mut(data.as_ptr(), end - start)
-                    .as_mut_unchecked()
-                    .iter_mut()
-            }
-        } else {
-            core::slice::IterMut::default()
-        }
+        unsafe { self.slice(start, end).as_mut().iter_mut() }
     }
 
     #[track_caller]
