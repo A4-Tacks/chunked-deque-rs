@@ -25,7 +25,4 @@ jobs:
       - run: cargo test
       - run: cargo check --workspace
       - run: rustup component add miri --toolchain nightly
-      - run: cargo +nightly miri test -- --skip unwind_safe
-      - run: cargo +nightly miri test -- unwind_safe
-        env:
-          MIRIFLAGS: -Zmiri-ignore-leaks
+      - run: cargo +nightly miri test

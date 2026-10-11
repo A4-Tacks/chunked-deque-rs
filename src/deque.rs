@@ -312,6 +312,13 @@ impl<T> Deque<T> {
             needs_back: bool,
             dealloc: Option<Chunk<T>>,
         }
+        impl<'a, T> Drop for Guard<'a, T> {
+            fn drop(&mut self) {
+                if let Some(chunk) = self.dealloc.take() {
+                    unsafe { chunk.dealloc(self.deque.info) };
+                }
+            }
+        }
         impl<'a, T> Guard<'a, T> {
             fn process(&mut self) -> bool {
                 let Guard {
@@ -354,7 +361,7 @@ impl<T> Deque<T> {
                 }
 
                 debug_assert_eq!(deque.left, deque.right);
-                !deque.chunks.is_empty()
+                false
             }
         }
         let mut guard = Guard {
