@@ -12,14 +12,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  upload-assets:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-          - os: windows-latest
-    runs-on: ${{ matrix.os }}
+  ubuntu:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: cargo bench --package benches | tee out
       - run: ./benches/difference.jq out
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo bench --package benches | tee out
+      - run: Invoke-WebRequest -Uri "https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-win64.exe" -OutFile "jq.exe"
+      - run: ./jq -nrRf ./benches/difference.jq out
