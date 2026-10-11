@@ -7,6 +7,33 @@ use crate::{
     chunk::{Chunk, Size},
 };
 
+#[derive(Debug, Default)]
+pub(crate) struct Points {
+    pub left_start: usize,
+    pub left_end: usize,
+    pub right_start: usize,
+    pub right_end: usize,
+}
+
+impl Points {
+    pub fn new<T>(deque: &Deque<T>) -> Self {
+        match deque.chunks.len() {
+            0 => Default::default(),
+            1 => Self {
+                left_start: deque.left.size(),
+                left_end: deque.right.size() + 1,
+                ..Default::default()
+            },
+            _ => Self {
+                left_start: deque.left.size(),
+                left_end: deque.info.count(),
+                right_start: 0,
+                right_end: deque.right.size() + 1,
+            },
+        }
+    }
+}
+
 impl<T> FromIterator<T> for Deque<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut deque = Deque::new();
@@ -111,13 +138,14 @@ macro_rules! impl_iter {
 
         impl<'a, T: 'a> $Iter<'a, T> {
             pub(crate) fn new(deque: &'a $($mut)? Deque<T>) -> Self {
+                let Points { left_start, left_end, right_start, right_end } = Points::new(deque);
                 let mut iter = deque.chunks.$iter();
                 let chunk_size = deque.info.count();
                 let front = iter.next().map_or_default(|chunk| unsafe {
-                    chunk.$iter(deque.left.size(), chunk_size)
+                    chunk.$iter(left_start, left_end)
                 });
                 let back = iter.next_back().map_or_default(|chunk| unsafe {
-                    chunk.$iter(0, deque.right.size() + 1)
+                    chunk.$iter(right_start, right_end)
                 });
                 Self {
                     iter,

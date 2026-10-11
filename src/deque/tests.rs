@@ -5,6 +5,7 @@ use alloc::string::{String, ToString};
 use crate::deque::Deque;
 
 extern crate std;
+use core::cmp::Ordering;
 #[allow(unused_imports)]
 use std::dbg;
 
@@ -179,11 +180,12 @@ enum Action {
     Front,
     Back,
     Fill,
+    Iter,
 }
 
 impl Action {
     fn from_num(n: u64) -> Action {
-        match n % 8 {
+        match n % 9 {
             0 => Self::PushBack,
             1 => Self::PushFront,
             2 => Self::PopBack,
@@ -192,11 +194,12 @@ impl Action {
             5 => Self::Front,
             6 => Self::Back,
             7 => Self::Fill,
+            8 => Self::Iter,
             _ => unreachable!(),
         }
     }
 
-    fn do_both<T: Clone + core::fmt::Debug + Eq>(
+    fn do_both<T: Clone + core::fmt::Debug + Ord>(
         self,
         mut generate: impl FnMut() -> T,
         a: &mut Deque<T>,
@@ -231,6 +234,20 @@ impl Action {
                 let value = generate();
                 a.push_back(value.clone());
                 b.push_back(value);
+            }
+            Self::Iter => {
+                assert_eq!(
+                    a.iter().cmp(b.iter()),
+                    Ordering::Equal,
+                    "{a:?} == {b:?}:\n  iter: {:?}",
+                    a.iter().collect::<VecDeque<_>>()
+                );
+                assert_eq!(
+                    a.iter().rev().cmp(b.iter().rev()),
+                    Ordering::Equal,
+                    "{a:?} == {b:?}:\n  iter: {:?}",
+                    a.iter().collect::<VecDeque<_>>()
+                );
             }
         }
     }
