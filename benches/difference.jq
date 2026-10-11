@@ -19,7 +19,7 @@ map(map(.n |= tonumber | if .t == "ms" then
 end)) |
 map(
   {name:(first.name|sub("/.*";"")),scale:(last.n/first.n)} |
-  .scale |= (tostring|sub("(?<=\\.\\d{2}).*";"x")) |
+  .scale |= (tostring+".00"|sub("(?<=\\.\\d{2}).*|$";"x")) |
   .name |= sub("^deque_";"") |
   .name |= "`\(.)`"
 ) |
