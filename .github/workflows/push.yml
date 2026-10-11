@@ -1,3 +1,5 @@
+name: push
+
 permissions:
   contents: write
 
