@@ -20,20 +20,21 @@ This crate has not been fully optimized, I believe its performance can be improv
 
 | bench of VecDeque  | scale |
 | ---                | ---   |
-| `push_front`       | 1.25x |
-| `push_back`        | 1.11x |
-| `pop_front`        | 0.82x |
-| `pop_back`         | 0.40x |
-| `push_mixed`       | 1.08x |
+| `push_front`       | 1.24x |
+| `push_back`        | 1.07x |
+| `pop_front`        | 0.84x |
+| `pop_back`         | 0.41x |
+| `push_mixed`       | 1.00x |
 | `pop_mixed`        | 1.00x |
-| `push_back_string` | 0.97x |
+| `drop`             | 0.38x |
+| `push_back_string` | 0.92x |
 | `push_back_medium` | 0.75x |
-| `push_back_large`  | 0.99x |
-| `pop_back_string`  | 0.79x |
+| `push_back_large`  | 0.97x |
+| `pop_back_string`  | 0.80x |
 | `pop_back_medium`  | 0.54x |
-| `pop_back_large`   | 0.75x |
-| `get`              | 0.59x |
-| `read_front`       | 0.50x |
-| `read_back`        | 0.50x |
-| `iterate`          | 0.94x |
-| `iterate_rev`      | 1.24x |
+| `pop_back_large`   | 0.74x |
+| `get`              | 0.60x |
+| `read_front`       | 0.66x |
+| `read_back`        | 0.66x |
+| `iterate`          | 0.95x |
+| `iterate_rev`      | 1.43x |

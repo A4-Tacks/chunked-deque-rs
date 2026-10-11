@@ -12,20 +12,22 @@ def group_by(f): reduce .[] as $item ({}; .[$item|f]+=[$item]) | map(.);
   {name:first}+last
 ] |
 group_by(.name|sub("/.*";"")) |
-map(select(length==2)) |
+map(map(select(.name|test("linked_list$")| not))|select(length==2)) |
 map(sort_by(.name)) |
 map(map(.n |= tonumber | if .t == "ms" then
   .t = "µs" | .n *= 1000
 end)) |
 map(
   {name:(first.name|sub("/.*";"")),scale:(last.n/first.n)} |
-  .scale |= (tostring|sub("(?<=\\.\\d{2}).*";"x")) |
+  .scale |= (tostring+".00"|sub("(?<=\\.\\d{2}).*|$";"x")) |
   .name |= sub("^deque_";"") |
   .name |= "`\(.)`"
 ) |
-(map(.name|length)|max) as $maxname |
-"| bench of VecDeque\(" "*($maxname-17)) | scale |",
-"| ---\(" "*($maxname-3)) | ---   |",
-(
-  .[] | "| \(.name|.+" "*($maxname-length)) | \(.scale|.+" "*(5-length)) |"
-)
+def fi($to): .+" "*($to-length);
+[
+  ["bench of VecDeque", "scale"],
+  ["---", "---"],
+  map([.name, .scale])[]
+] |
+[range(first|length) as $i | map(.[$i]|length)|max] as $maxes |
+.[] | "| \([to_entries[] as {$value,$key} | $value|fi($maxes[$key])] | join(" | ")) |"

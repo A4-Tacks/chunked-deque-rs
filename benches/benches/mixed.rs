@@ -137,6 +137,48 @@ fn linked_list_deque_pop_back(b: &mut Bencher) {
     );
 }
 
+fn vec_deque_drop(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_vec_deque(&mut rng),
+        |deque| {
+            for _ in 0..MIN_CASE_ITERATION {
+                black_box(std::mem::take(deque));
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn chunked_deque_drop(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_chunked_deque(&mut rng),
+        |deque| {
+            for _ in 0..MIN_CASE_ITERATION {
+                black_box(std::mem::take(deque));
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
+fn linked_list_deque_drop(b: &mut Bencher) {
+    let mut rng = rand::rng();
+
+    b.iter_batched_ref(
+        || random_linked_list_deque(&mut rng),
+        |deque| {
+            for _ in 0..MIN_CASE_ITERATION {
+                black_box(std::mem::take(deque));
+            }
+        },
+        BATCH_SIZE,
+    );
+}
+
 fn criterion_benchmark(c: &mut Criterion) {
     bench_caller!(c($));
 
@@ -144,6 +186,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     bench!(vec_deque_pop_mixed, chunked_deque_pop_mixed);
     bench!(linked_list_deque_push_back);
     bench!(linked_list_deque_pop_back);
+    bench!(vec_deque_drop, chunked_deque_drop, linked_list_deque_drop);
 }
 
 criterion_group!(benches, criterion_benchmark);
