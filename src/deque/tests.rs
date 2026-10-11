@@ -181,11 +181,12 @@ enum Action {
     Back,
     Fill,
     Iter,
+    Create,
 }
 
 impl Action {
     fn from_num(n: u64) -> Action {
-        match n % 9 {
+        match n % 10 {
             0 => Self::PushBack,
             1 => Self::PushFront,
             2 => Self::PopBack,
@@ -195,6 +196,7 @@ impl Action {
             6 => Self::Back,
             7 => Self::Fill,
             8 => Self::Iter,
+            9 => Self::Create,
             _ => unreachable!(),
         }
     }
@@ -204,6 +206,7 @@ impl Action {
         mut generate: impl FnMut() -> T,
         a: &mut Deque<T>,
         b: &mut VecDeque<T>,
+        create: impl Fn() -> Deque<T>,
     ) {
         match self {
             Action::PushBack => {
@@ -235,7 +238,7 @@ impl Action {
                 a.push_back(value.clone());
                 b.push_back(value);
             }
-            Self::Iter => {
+            Action::Iter => {
                 fn cmp_iter<T: Ord>(
                     a: impl Iterator<Item = T>,
                     b: impl Iterator<Item = T>,
@@ -260,6 +263,11 @@ impl Action {
                     a.iter().collect::<VecDeque<_>>()
                 );
             }
+            Action::Create => {
+                *a = create();
+                *b = Default::default();
+                assert_eq!(a.len(), b.len());
+            }
         }
     }
 }
@@ -268,26 +276,34 @@ impl Action {
 fn fuzzy() {
     let drop_check = DropCheck::new();
     let mut rand = oorandom::Rand64::new(0);
-    let mut a = Deque::new();
-    let mut b = VecDeque::new();
 
-    for _ in 0..10000 {
-        let action = Action::from_num(rand.rand_u64());
-        action.do_both(|| drop_check.pair(), &mut a, &mut b);
+    for chunk_size in [Some(1), Some(7), Some(8), None] {
+        let create =
+            || chunk_size.map_or_else(Deque::new, Deque::with_chunksize);
+        let mut a = create();
+        let mut b = VecDeque::new();
+
+        for _ in 0..10000 {
+            let action = Action::from_num(rand.rand_u64());
+            action.do_both(|| drop_check.pair(), &mut a, &mut b, &create);
+        }
     }
 }
 
 #[test]
 fn fuzzy_zst() {
     let mut rand = oorandom::Rand64::new(0);
-    let mut a = Deque::new();
-    let mut b = VecDeque::new();
 
-    for _ in 0..10000 {
-        let action = Action::from_num(rand.rand_u64());
-        action.do_both(|| (), &mut a, &mut b);
+    for chunk_size in [Some(1), Some(7), Some(8), None] {
+        let create =
+            || chunk_size.map_or_else(Deque::new, Deque::with_chunksize);
+        let mut a = create();
+        let mut b = VecDeque::new();
 
-        assert_eq!(a.len() == 0, a.is_empty());
+        for _ in 0..10000 {
+            let action = Action::from_num(rand.rand_u64());
+            action.do_both(|| (), &mut a, &mut b, &create);
+        }
     }
 }
 
