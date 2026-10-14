@@ -23,6 +23,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cargo bench --package benches | tee out
+      - run: cargo bench --package benches --features multi | tee out
       - run: Invoke-WebRequest -Uri "https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-win64.exe" -OutFile "jq.exe"
       - run: ./jq -nrRf ./benches/difference.jq out

@@ -1,16 +1,16 @@
 use benches::*;
 
-fn vec_deque_get(b: &mut Bencher) {
+fn vec_deque_get(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut query = vec![];
 
-    for _ in 0..VEC_SIZE / 2 {
-        query.push(rng.random::<u64>() as usize % VEC_SIZE);
+    for _ in 0..size.size() / 2 {
+        query.push(rng.random::<u64>() as usize % size.size());
     }
     b.iter_batched_ref(
         || {
             query.shuffle(&mut rng);
-            (random_vec_deque(&mut rng), query.clone())
+            (size.vec_deque(&mut rng), query.clone())
         },
         |(deque, query)| {
             for &mut index in query {
@@ -21,17 +21,17 @@ fn vec_deque_get(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_get(b: &mut Bencher) {
+fn chunked_deque_get(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut query = vec![];
 
-    for _ in 0..VEC_SIZE / 2 {
-        query.push(rng.random::<u64>() as usize % VEC_SIZE);
+    for _ in 0..size.size() / 2 {
+        query.push(rng.random::<u64>() as usize % size.size());
     }
     b.iter_batched_ref(
         || {
             query.shuffle(&mut rng);
-            (random_chunked_deque(&mut rng), query.clone())
+            (size.chunked_deque(&mut rng), query.clone())
         },
         |(deque, query)| {
             for &mut index in query {
@@ -42,11 +42,11 @@ fn chunked_deque_get(b: &mut Bencher) {
     );
 }
 
-fn vec_deque_read_front(b: &mut Bencher) {
+fn vec_deque_read_front(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.vec_deque(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(deque.front());
@@ -56,11 +56,11 @@ fn vec_deque_read_front(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_read_front(b: &mut Bencher) {
+fn chunked_deque_read_front(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_chunked_deque(&mut rng),
+        || size.chunked_deque(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(deque.front());
@@ -70,11 +70,11 @@ fn chunked_deque_read_front(b: &mut Bencher) {
     );
 }
 
-fn vec_deque_read_back(b: &mut Bencher) {
+fn vec_deque_read_back(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.vec_deque(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(deque.front());
@@ -84,11 +84,11 @@ fn vec_deque_read_back(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_read_back(b: &mut Bencher) {
+fn chunked_deque_read_back(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_chunked_deque(&mut rng),
+        || size.chunked_deque(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(deque.front());
@@ -98,11 +98,11 @@ fn chunked_deque_read_back(b: &mut Bencher) {
     );
 }
 
-fn vec_deque_iterate(b: &mut Bencher) {
+fn vec_deque_iterate(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.vec_deque(&mut rng),
         |deque| {
             for elem in deque {
                 black_box(elem);
@@ -112,11 +112,11 @@ fn vec_deque_iterate(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_iterate(b: &mut Bencher) {
+fn chunked_deque_iterate(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_chunked_deque(&mut rng),
+        || size.chunked_deque(&mut rng),
         |deque| {
             for elem in deque {
                 black_box(elem);
@@ -126,11 +126,11 @@ fn chunked_deque_iterate(b: &mut Bencher) {
     );
 }
 
-fn vec_deque_iterate_rev(b: &mut Bencher) {
+fn vec_deque_iterate_rev(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.vec_deque(&mut rng),
         |deque| {
             for elem in deque.iter().rev() {
                 black_box(elem);
@@ -140,11 +140,11 @@ fn vec_deque_iterate_rev(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_iterate_rev(b: &mut Bencher) {
+fn chunked_deque_iterate_rev(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_chunked_deque(&mut rng),
+        || size.chunked_deque(&mut rng),
         |deque| {
             for elem in deque.iter().rev() {
                 black_box(elem);

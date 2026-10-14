@@ -1,25 +1,11 @@
 use benches::*;
 
-fn random_linked_list_deque(rng: &mut ThreadRng) -> LinkedList<u32> {
-    let mut deque = LinkedList::new();
-
-    for _ in 0..VEC_SIZE {
-        let elem = rng.random::<u32>();
-        if &elem & 1 == 0 {
-            deque.push_back(elem);
-        } else {
-            deque.push_front(elem);
-        }
-    }
-    deque
-}
-
-fn vec_deque_push_mixed(b: &mut Bencher) {
+fn vec_deque_push_mixed(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut datas = vec![];
     let deque = VecDeque::new();
 
-    for _ in 0..VEC_SIZE {
+    for _ in 0..size.size() {
         datas.push(rng.random::<u32>());
     }
     b.iter_batched_ref(
@@ -37,12 +23,12 @@ fn vec_deque_push_mixed(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_push_mixed(b: &mut Bencher) {
+fn chunked_deque_push_mixed(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut datas = vec![];
     let deque = Deque::new();
 
-    for _ in 0..VEC_SIZE {
+    for _ in 0..size.size() {
         datas.push(rng.random::<u32>());
     }
     b.iter_batched_ref(
@@ -60,15 +46,15 @@ fn chunked_deque_push_mixed(b: &mut Bencher) {
     );
 }
 
-fn vec_deque_pop_mixed(b: &mut Bencher) {
+fn vec_deque_pop_mixed(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut datas = vec![];
 
-    for _ in 0..VEC_SIZE {
+    for _ in 0..size.size() {
         datas.push(rng.random());
     }
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.vec_deque(&mut rng),
         |deque| {
             for &data in &datas {
                 if data {
@@ -82,15 +68,15 @@ fn vec_deque_pop_mixed(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_pop_mixed(b: &mut Bencher) {
+fn chunked_deque_pop_mixed(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut datas = vec![];
 
-    for _ in 0..VEC_SIZE {
+    for _ in 0..size.size() {
         datas.push(rng.random());
     }
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.chunked_deque(&mut rng),
         |deque| {
             for &data in &datas {
                 if data {
@@ -104,12 +90,12 @@ fn chunked_deque_pop_mixed(b: &mut Bencher) {
     );
 }
 
-fn linked_list_deque_push_back(b: &mut Bencher) {
+fn linked_list_deque_push_back(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
     let mut datas = vec![];
     let deque = LinkedList::new();
 
-    for _ in 0..VEC_SIZE {
+    for _ in 0..size.size() {
         datas.push(rng.random::<u32>());
     }
     b.iter_batched_ref(
@@ -123,11 +109,11 @@ fn linked_list_deque_push_back(b: &mut Bencher) {
     );
 }
 
-fn linked_list_deque_pop_back(b: &mut Bencher) {
+fn linked_list_deque_pop_back(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_linked_list_deque(&mut rng),
+        || size.linked_list(&mut rng),
         |deque| {
             while !deque.is_empty() {
                 black_box(deque.pop_back());
@@ -137,11 +123,11 @@ fn linked_list_deque_pop_back(b: &mut Bencher) {
     );
 }
 
-fn vec_deque_drop(b: &mut Bencher) {
+fn vec_deque_drop(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_vec_deque(&mut rng),
+        || size.vec_deque(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(std::mem::take(deque));
@@ -151,11 +137,11 @@ fn vec_deque_drop(b: &mut Bencher) {
     );
 }
 
-fn chunked_deque_drop(b: &mut Bencher) {
+fn chunked_deque_drop(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_chunked_deque(&mut rng),
+        || size.chunked_deque(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(std::mem::take(deque));
@@ -165,11 +151,11 @@ fn chunked_deque_drop(b: &mut Bencher) {
     );
 }
 
-fn linked_list_deque_drop(b: &mut Bencher) {
+fn linked_list_deque_drop(b: &mut Bencher, size: &Input) {
     let mut rng = rand::rng();
 
     b.iter_batched_ref(
-        || random_linked_list_deque(&mut rng),
+        || size.linked_list(&mut rng),
         |deque| {
             for _ in 0..MIN_CASE_ITERATION {
                 black_box(std::mem::take(deque));

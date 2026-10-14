@@ -8,6 +8,9 @@ chunked-deque = { version = "*", path = ".." }
 rand = "0.10.3"
 criterion = "0.7.0"
 
+[features]
+multi = []
+
 [[bench]]
 name = "basic"
 harness = false
