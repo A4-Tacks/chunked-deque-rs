@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cargo bench --package benches | tee out
+      - run: cargo bench --package benches --features multi | tee out
       - run: ./benches/difference.jq out
 
   windows:
