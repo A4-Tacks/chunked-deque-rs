@@ -48,10 +48,10 @@ macro_rules! bench_caller {
     };
 }
 /// input_array![]
-macro_rules! input_array { ($($e:expr),+) => { [$(Input($e)),+] }; }
+macro_rules! input_array { ($($e:expr),+ $(,)?) => { [$(Input($e)),+] }; }
 
 #[cfg(feature = "multi")]
-pub const VEC_SIZES: [Input; 5] = input_array![100, 1000, 10000, 100000, 1000000];
+pub const VEC_SIZES: [Input; 4] = input_array![100, 1000, 10000, 100000, /*1000000*/];
 #[cfg(not(feature = "multi"))]
 pub const VEC_SIZES: [Input; 1] = input_array![10000];
 
