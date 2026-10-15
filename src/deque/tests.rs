@@ -196,13 +196,19 @@ fn test_drop_unwind_safe() {
             assert_ne!(self.0.1, 4, "four hit")
         }
     }
-    let droper = DropCheck::new();
-    let datas = (0..7).map(|_| PanicFour(droper.pair()));
-    let deque = Deque::from_iter(datas);
-    let resp = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        drop(deque);
-    }));
-    assert!(resp.is_err());
+    for chunk_size in [Some(1), Some(7), Some(8), None] {
+        let create =
+            || chunk_size.map_or_else(Deque::new, Deque::with_chunksize);
+        let droper = DropCheck::new();
+        let datas = (0..7).map(|_| PanicFour(droper.pair()));
+        let mut deque = create();
+        deque.extend(datas);
+        let resp =
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                drop(deque);
+            }));
+        assert!(resp.is_err());
+    }
 }
 
 #[derive(Debug)]

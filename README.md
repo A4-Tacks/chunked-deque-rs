@@ -26,7 +26,7 @@ This crate has not been fully optimized, I believe its performance can be improv
 | `pop_back`         | 0.40x | 0.40x | 0.40x | 0.41x  | 0.41x   |
 | `push_mixed`       | 0.99x | 0.93x | 0.91x | 0.84x  | 0.88x   |
 | `pop_mixed`        | 0.77x | 0.40x | 0.75x | 1.02x  | 1.02x   |
-| `drop`             | 0.30x | 0.30x | 0.30x | 0.30x  | 0.30x   |
+| `drop`             | 0.43x | 0.43x | 0.43x | 0.44x  | 0.42x   |
 | `push_back_string` | 1.07x | 1.18x | 1.25x | 1.29x  | 1.29x   |
 | `push_back_medium` | 0.76x | 0.81x | 0.91x | 0.99x  | 0.65x   |
 | `push_back_large`  | 0.71x | 0.75x | 0.95x | 1.29x  | 1.28x   |

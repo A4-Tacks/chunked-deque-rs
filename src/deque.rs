@@ -308,8 +308,6 @@ impl<T> Deque<T> {
     pub fn clear(&mut self) {
         struct Guard<'a, T> {
             deque: &'a mut Deque<T>,
-            needs_front: bool,
-            needs_back: bool,
             dealloc: Option<Chunk<T>>,
         }
         impl<'a, T> Drop for Guard<'a, T> {
@@ -317,60 +315,38 @@ impl<T> Deque<T> {
                 if let Some(chunk) = self.dealloc.take() {
                     unsafe { chunk.dealloc(self.deque.info) };
                 }
+                self.process();
+                debug_assert_eq!(self.deque.left, self.deque.right);
+                debug_assert_eq!(self.deque.chunks.len(), 0);
             }
         }
         impl<'a, T> Guard<'a, T> {
-            fn process(&mut self) -> bool {
+            fn process(&mut self) {
                 let Guard {
                     deque,
-                    needs_front,
-                    needs_back,
                     dealloc,
                 } = self;
-                let chunk_size = deque.info.count();
 
-                if let Some(chunk) = dealloc.take() {
-                    unsafe { chunk.dealloc(deque.info) };
-                    return true;
-                }
-                let mut dealloc = |chunk, start, end| {
+                while let Some((chunk, range)) = deque.pop_chunk::<true>() {
                     debug_assert!(dealloc.is_none());
+
                     unsafe {
-                        dealloc.get_or_insert(chunk).drop_in_place(start, end);
+                        dealloc
+                            .get_or_insert(chunk)
+                            .drop_in_place(range.start, range.end)
                     }
-                };
 
-                if core::mem::take(needs_front) {
-                    if let Some((front, range)) = deque.pop_chunk::<false>() {
-                        dealloc(front, range.start, range.end);
+                    if let Some(chunk) = dealloc.take() {
+                        unsafe { chunk.dealloc(deque.info) };
                     }
-                    return true;
                 }
-
-                if core::mem::take(needs_back) {
-                    if let Some((back, range)) = deque.pop_chunk::<true>() {
-                        dealloc(back, range.start, range.end);
-                    }
-                    return true;
-                }
-
-                if let Some((chunk, range)) = deque.pop_chunk::<true>() {
-                    debug_assert_eq!(range, 0..deque.chunk_size());
-                    dealloc(chunk, 0, chunk_size);
-                    return true;
-                }
-
-                debug_assert_eq!(deque.left, deque.right);
-                false
             }
         }
         let mut guard = Guard {
             deque: self,
-            needs_front: true,
-            needs_back: true,
             dealloc: None,
         };
-        while guard.process() {}
+        guard.process();
     }
 
     fn pop_chunk<const IS_BACK: bool>(
