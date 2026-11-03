@@ -21,6 +21,9 @@ This crate has not been fully optimized, I believe its performance can be improv
 + If you don't need to timely release of reserves, use `VecDeque`
 + If you don't need cache friendly, use `LinkedList`
 
+[`crossbeam-channel`]: https://crates.io/crates/crossbeam-channel
+[`tokio::sync::mpsc`]: https://docs.rs/tokio/latest/tokio/sync/mpsc/index.html
+
 ## Benches (small struct)
 - On a small struct, `push` methods is comparable in speed to `VecDeque` (LinkedList is 0.1x slow)
 - Due timely release of reserves, `pop` methods is a bit slow (about 0.4x to 1x, LinkedList is 0.05x)
