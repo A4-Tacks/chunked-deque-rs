@@ -12,6 +12,14 @@ This crate has not been fully optimized, I believe its performance can be improv
 ## Info
 - Miri passed
 - No 'move elements' methods, like `insert` `remove` `drain` `retain`
+- Use `&mut self` instead of thread synchronization
+- Can *O*(1) indexing (`LinkedList`, channels cannot)
+- Non-async
+
++ If you need thread synchronization deque, use [`crossbeam-channel`]
++ If you need an async deque, use [`tokio::sync::mpsc`]
++ If you don't need to timely release of reserves, use `VecDeque`
++ If you don't need cache friendly, use `LinkedList`
 
 ## Benches (small struct)
 - On a small struct, `push` methods is comparable in speed to `VecDeque` (LinkedList is 0.1x slow)
