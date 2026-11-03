@@ -39,6 +39,8 @@ impl<T> Deque<T> {
 
     /// Manual set chunk size (the number of elements stored).
     ///
+    /// [`Clone`] will inherit this size.
+    ///
     /// # Panics
     ///
     /// Panics if `size == 0`.
