@@ -19,7 +19,7 @@ This crate has not been fully optimized, I believe its performance can be improv
 + If you need thread synchronization deque, use [`crossbeam-channel`]
 + If you need an async deque, use [`tokio::sync::mpsc`]
 + If you don't need to timely release of reserves, use `VecDeque`
-+ If you don't need cache friendly, use `LinkedList`
++ If you don't need cache friendly and less alloc, use `LinkedList`
 
 [`crossbeam-channel`]: https://crates.io/crates/crossbeam-channel
 [`tokio::sync::mpsc`]: https://docs.rs/tokio/latest/tokio/sync/mpsc/index.html

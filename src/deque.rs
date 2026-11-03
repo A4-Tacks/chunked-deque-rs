@@ -11,7 +11,7 @@ pub(crate) mod iter;
 const _: () =
     assert!(size_of::<Option<Deque<i16>>>() == size_of::<Deque<i16>>());
 
-/// Deque, similar `VecDeque<Box<[T]>>`, timely release of reserves for pop methods
+/// Deque, similar `VecDeque<Box<[T; n]>>`, timely release of reserves for pop methods
 pub struct Deque<T> {
     info: LayoutInfo,
     chunks: VecDeque<Chunk<T>>,
